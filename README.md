@@ -69,7 +69,7 @@ Open-source dataset with 185 power stations:
 - Wind: 611 stations
 - Solar: 546 stations
 - Data: Power CSVs + Weather NPY arrays
-- Location: `data/` (symlinked from `/home/laohe/finetune_data_process/open`)
+- Location: `data/` directory
 
 ## Key Differences from IResFM
 
@@ -98,4 +98,4 @@ See `CONFIGS.md` for complete configuration details.
 - This is **pseudocode** for documentation, not executable code
 - All baselines use the same data and evaluation protocol
 - Each baseline tested with 3 hyperparameter configurations (see CONFIGS.md)
-- Original implementation: `/home/laohe/dev_yfliu/upstream_backup/ne_baseline/`
+- All baseline methods follow unified interface for fair comparison

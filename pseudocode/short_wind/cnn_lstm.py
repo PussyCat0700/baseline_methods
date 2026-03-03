@@ -1,21 +1,32 @@
 """
-CNN-LSTM - CNN-LSTM Hybrid (Short-term Wind)
+Baseline Method: CNN-LSTM Hybrid
+Task: Short-term Wind Power Forecasting
 
 Combines CNN for feature extraction with LSTM for temporal modeling.
+
+Tested Configurations:
+    Config 1: hidden_size=64, num_layers=1
+    Config 2: hidden_size=128, num_layers=2
+    Config 3: hidden_size=256, num_layers=4  ✓ BEST
+
+Best Configuration: Config 3
+    - hidden_size: 256
+    - num_layers: 4
+    - dropout: 0.5
 """
 
 class CNN_LSTM:
-    def __init__(self, cnn_channels=[32,64,128], lstm_hidden=256):
+    def __init__(self, hidden_size=256, num_layers=4, dropout=0.5):
         self.cnn = Sequential([
-            Conv1D(15, cnn_channels[0], kernel_size=3),
+            Conv1D(15, 32, kernel_size=3),
             ReLU(),
-            Conv1D(cnn_channels[0], cnn_channels[1], kernel_size=3),
+            Conv1D(32, 64, kernel_size=3),
             ReLU(),
-            Conv1D(cnn_channels[1], cnn_channels[2], kernel_size=3),
+            Conv1D(64, 128, kernel_size=3),
             ReLU()
         ])
-        self.lstm = LSTM(cnn_channels[2], lstm_hidden, num_layers=2)
-        self.fc = Linear(lstm_hidden, 480)
+        self.lstm = LSTM(128, hidden_size, num_layers=num_layers, dropout=dropout)
+        self.fc = Linear(hidden_size, 480)
 
     def forward(self, weather_past, weather_future, power_past):
         """
@@ -32,7 +43,7 @@ class CNN_LSTM:
         x = x.transpose(1, 2)  # [B, T', 128]
 
         # LSTM temporal modeling
-        _, (h_n, _) = self.lstm(x)  # h_n: [2, B, 256]
+        _, (h_n, _) = self.lstm(x)  # h_n: [num_layers, B, hidden_size]
 
         # Output projection
         return self.fc(h_n[-1])  # [B, 480]

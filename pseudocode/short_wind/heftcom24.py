@@ -1,20 +1,25 @@
 """
-HEFTCom24 - LightGBM Baseline (Short-term Wind)
+Baseline Method: HEFTCom24 (LightGBM)
+Task: Short-term Wind Power Forecasting
 
-Competition winner from HEFTCom 2024.
-Uses LightGBM gradient boosting for power forecasting.
+HEFTCom 2024 competition winner using LightGBM gradient boosting.
 
 Tested Configurations:
     Config 1: n_estimators=100, num_leaves=200, embed_dim=128, power_ctx_dim=64, encoder_hidden_dim=256
     Config 2: n_estimators=200, num_leaves=400, embed_dim=128, power_ctx_dim=64, encoder_hidden_dim=256  ✓ BEST
-    Config 3: (additional config from original implementation)
+    Config 3: n_estimators=400, num_leaves=700, embed_dim=64, power_ctx_dim=32, encoder_hidden_dim=128
 
-Best Config: 2
+Best Configuration: Config 2
+    - n_estimators: 200
+    - num_leaves: 400
+    - embed_dim: 128
+    - power_ctx_dim: 64
+    - encoder_hidden_dim: 256
 """
 
 class HEFTCom24:
     def __init__(self, n_estimators=200, num_leaves=400, embed_dim=128,
-                 power_ctx_dim=64, encoder_hidden_dim=256):  # Best config
+                 power_ctx_dim=64, encoder_hidden_dim=256):
         self.embed = Linear(input_dim, embed_dim)
         self.power_encoder = LSTM(power_ctx_dim, encoder_hidden_dim)
         self.model = LightGBM(
@@ -31,11 +36,13 @@ class HEFTCom24:
         Output:
             power_future: [B, 480]
         """
-        # Flatten and concatenate features
-        features = concat([
-            flatten(weather_future),  # [B, 1800]
-            flatten(power_past)       # [B, 480]
-        ])  # [B, 2280]
+        # Embed weather features
+        weather_feat = self.embed(flatten(weather_future))  # [B, embed_dim]
 
-        # LightGBM prediction
+        # Encode power context
+        power_feat = self.power_encoder(power_past.unsqueeze(-1))[-1]  # [B, encoder_hidden_dim]
+
+        # Concatenate features
+        features = concat([weather_feat, power_feat])  # [B, embed_dim + encoder_hidden_dim]
+
         return self.model.predict(features)  # [B, 480]

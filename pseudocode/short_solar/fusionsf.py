@@ -1,15 +1,33 @@
 """
-FusionSF - Fusion of Spatial Features (Short-term Solar)
+Baseline Method: FusionSF (Fusion of Spatial Features)
+Task: Short-term Solar Power Forecasting
 
 Fuses spatial and temporal features for solar power forecasting.
+
+Tested Configurations:
+    Config 1: d_model=128, nhead=2, num_decoder_layers=3, look_back_steps=48
+    Config 2: d_model=256, nhead=4, num_decoder_layers=6, look_back_steps=96  ✓ BEST
+    Config 3: d_model=512, nhead=8, num_decoder_layers=12, look_back_steps=96
+
+Best Configuration: Config 2
+    - d_model: 256
+    - nhead: 4
+    - num_decoder_layers: 6
+    - look_back_steps: 96
+    - dim_feedforward: 1024
 """
 
 class FusionSF:
-    def __init__(self, hidden_dim=256):
-        self.spatial_encoder = Conv2D([32, 64, 128])
-        self.temporal_encoder = LSTM(hidden_dim, num_layers=2)
-        self.fusion = AttentionFusion(hidden_dim)
-        self.fc = Linear(hidden_dim, 480)
+    def __init__(self, d_model=256, nhead=4, num_decoder_layers=6,
+                 look_back_steps=96, dim_feedforward=1024):
+        self.encoder = GRU(12, d_model, num_layers=2)
+        self.decoder = TransformerDecoder(
+            d_model=d_model,
+            nhead=nhead,
+            num_layers=num_decoder_layers,
+            dim_feedforward=dim_feedforward
+        )
+        self.fc = Linear(d_model, 480)
 
     def forward(self, weather_past, weather_future, power_past):
         """
@@ -20,16 +38,13 @@ class FusionSF:
         Output:
             power_future: [B, 480]
         """
-        # Spatial feature extraction (reshape to 2D)
-        spatial_feat = weather_future.reshape(B, 10, 12, 12)  # [B, 10, 12, 12]
-        spatial_feat = self.spatial_encoder(spatial_feat)  # [B, 128, H', W']
-        spatial_feat = spatial_feat.mean(dim=[2,3])  # [B, 128]
+        # Encode past context
+        _, h_n = self.encoder(weather_past)  # h_n: [2, B, d_model]
+        memory = h_n[-1].unsqueeze(1)  # [B, 1, d_model]
 
-        # Temporal feature extraction
-        temporal_feat = self.temporal_encoder(power_past.unsqueeze(-1))  # [B, 480, hidden_dim]
-        temporal_feat = temporal_feat[:, -1, :]  # [B, hidden_dim]
+        # Decode future
+        future_tokens = weather_future  # [B, 120, 12]
+        decoder_out = self.decoder(future_tokens, memory)  # [B, 120, d_model]
 
-        # Fusion
-        fused = self.fusion(spatial_feat, temporal_feat)  # [B, hidden_dim]
-
-        return self.fc(fused)  # [B, 480]
+        # Output projection
+        return self.fc(decoder_out.mean(dim=1))  # [B, 480]

@@ -1,21 +1,38 @@
 """
-CNN-LSTM - CNN-LSTM Hybrid (Short-term Solar)
+Baseline Method: CNN-LSTM Hybrid
+Task: Short-term Solar Power Forecasting
 
 Combines CNN for feature extraction with LSTM for temporal modeling.
+
+Tested Configurations:
+    Config 1: d_model=128, nhead=4, cnn_layers_past=2, cnn_layers_future=2, look_back_steps=96
+    Config 2: d_model=256, nhead=8, cnn_layers_past=3, cnn_layers_future=2, look_back_steps=192, ffn_dim=1024  ✓ BEST
+    Config 3: d_model=128, nhead=4, cnn_layers_past=4, cnn_layers_future=3, look_back_steps=48, dropout=0.2
+
+Best Configuration: Config 2
+    - d_model: 256
+    - nhead: 8
+    - cnn_layers_past: 3
+    - cnn_layers_future: 2
+    - look_back_steps: 192
+    - ffn_dim: 1024
 """
 
 class CNN_LSTM_Solar:
-    def __init__(self, cnn_channels=[32,64,128], lstm_hidden=256):
-        self.cnn = Sequential([
-            Conv1D(12, cnn_channels[0], kernel_size=3),
-            ReLU(),
-            Conv1D(cnn_channels[0], cnn_channels[1], kernel_size=3),
-            ReLU(),
-            Conv1D(cnn_channels[1], cnn_channels[2], kernel_size=3),
-            ReLU()
+    def __init__(self, d_model=256, nhead=8, cnn_layers_past=3, cnn_layers_future=2,
+                 look_back_steps=192, ffn_dim=1024):
+        self.cnn_past = Sequential([
+            Conv1D(12, 32, kernel_size=3) for _ in range(cnn_layers_past)
         ])
-        self.lstm = LSTM(cnn_channels[2], lstm_hidden, num_layers=2)
-        self.fc = Linear(lstm_hidden, 480)
+        self.cnn_future = Sequential([
+            Conv1D(12, 32, kernel_size=3) for _ in range(cnn_layers_future)
+        ])
+        self.attention = MultiHeadAttention(nhead, d_model)
+        self.ffn = Sequential([
+            Linear(d_model, ffn_dim),
+            ReLU(),
+            Linear(ffn_dim, 480)
+        ])
 
     def forward(self, weather_past, weather_future, power_past):
         """
@@ -27,12 +44,13 @@ class CNN_LSTM_Solar:
             power_future: [B, 480]
         """
         # CNN feature extraction
-        x = weather_future.transpose(1, 2)  # [B, 12, 120]
-        x = self.cnn(x)  # [B, 128, T']
-        x = x.transpose(1, 2)  # [B, T', 128]
+        past_feat = self.cnn_past(weather_past.transpose(1, 2))  # [B, C, T]
+        future_feat = self.cnn_future(weather_future.transpose(1, 2))  # [B, C, T]
 
-        # LSTM temporal modeling
-        _, (h_n, _) = self.lstm(x)  # h_n: [2, B, 256]
+        # Cross-attention
+        past_feat = past_feat.transpose(1, 2)  # [B, T, C]
+        future_feat = future_feat.transpose(1, 2)  # [B, T, C]
+        attn_out = self.attention(query=future_feat, key=past_feat, value=past_feat)  # [B, T, C]
 
         # Output projection
-        return self.fc(h_n[-1])  # [B, 480]
+        return self.ffn(attn_out.mean(dim=1))  # [B, 480]

@@ -1,17 +1,43 @@
 """
-DMOM - Decomposition-based Multi-Objective Model (Ultrashort Wind)
+Baseline Method: DMOM (Decomposition-based Multi-Objective Model)
+Task: Ultrashort Wind Power Forecasting
 
-Uses wavelet decomposition for multi-scale ultrashort-term forecasting.
+Uses multi-scale frequency decomposition for ultrashort-term forecasting.
+
+Tested Configurations:
+    Config 1: c_hidden=32, alpha=0.3, fc_hidden_dim=128, dropout=0.05
+    Config 2: c_hidden=48, alpha=0.5, fc_hidden_dim=256, dropout=0.10
+    Config 3: c_hidden=64, alpha=0.7, fc_hidden_dim=384, dropout=0.15  ✓ BEST
+
+Best Configuration: Config 3
+    - c_hidden: 64
+    - alpha: 0.7
+    - fc_hidden_dim: 384
+    - dropout: 0.15
 """
 
 class DMOM:
-    def __init__(self, wavelet='db4', levels=3, hidden_dim=128):
-        self.wavelet = WaveletTransform(wavelet, levels)
-        self.component_models = [
-            LSTM(1, hidden_dim, num_layers=2)
-            for _ in range(levels + 1)  # +1 for approximation
-        ]
-        self.fc = Linear(hidden_dim * (levels + 1), 480)
+    def __init__(self, c_hidden=64, alpha=0.7, fc_hidden_dim=384, dropout=0.15):
+        self.fft = FFT()
+        self.low_branch = Sequential([
+            Conv1D(1, c_hidden, kernel_size=5),
+            ReLU(),
+            Conv1D(c_hidden, c_hidden * 2, kernel_size=5),
+            ReLU()
+        ])
+        self.high_branch = Sequential([
+            Conv1D(1, c_hidden, kernel_size=3),
+            ReLU(),
+            Conv1D(c_hidden, c_hidden * 2, kernel_size=3),
+            ReLU()
+        ])
+        self.fc = Sequential([
+            Linear(c_hidden * 4, fc_hidden_dim),
+            ReLU(),
+            Dropout(dropout),
+            Linear(fc_hidden_dim, 480)
+        ])
+        self.alpha = alpha
 
     def forward(self, weather_past, weather_future, power_past):
         """
@@ -22,15 +48,14 @@ class DMOM:
         Output:
             power_future: [B, 480]
         """
-        # Wavelet decomposition
-        components = self.wavelet.decompose(power_past)  # List of [B, T_i]
+        # FFT decomposition
+        freq = self.fft(power_past)  # [B, 480] complex
+        low_freq, high_freq = split_frequency(freq, alpha=self.alpha)  # [B, T_low], [B, T_high]
 
-        # Model each component
-        features = []
-        for model, component in zip(self.component_models, components):
-            _, (h_n, _) = model(component.unsqueeze(-1))  # [1, B, hidden_dim]
-            features.append(h_n[-1])  # [B, hidden_dim]
+        # Process low and high frequency components
+        low_feat = self.low_branch(low_freq.unsqueeze(1))  # [B, c_hidden*2, T']
+        high_feat = self.high_branch(high_freq.unsqueeze(1))  # [B, c_hidden*2, T']
 
         # Concatenate and predict
-        x = concat(features, dim=-1)  # [B, hidden_dim * (levels+1)]
-        return self.fc(x)  # [B, 480]
+        features = concat([low_feat.mean(dim=-1), high_feat.mean(dim=-1)])  # [B, c_hidden*4]
+        return self.fc(features)  # [B, 480]

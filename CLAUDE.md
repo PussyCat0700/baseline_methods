@@ -66,14 +66,13 @@ This repository contains pseudocode documentation for 20 baseline power forecast
 ## Important Notes
 
 1. **This is pseudocode only** - Not executable, for documentation purposes
-2. **For Nature Energy reviewers** - To understand baseline implementations
+2. **For reviewers** - To understand baseline implementations
 3. **Unified interface** - All baselines follow same input/output specification
-4. **Data is included** - Same 185 stations as main method repository
-5. **Original repository** - Located at `/home/laohe/dev_yfliu/upstream_backup/ne_baseline/` (reference only)
+4. **Data is included** - 185 stations dataset included
 
 ## Data Source
 
-Data dir `data` linked from: `/home/laohe/finetune_data_process/open`
+Data directory: `data/`
 
 ## Conda Environment
 
@@ -82,7 +81,3 @@ Use conda environment: `zhp`
 ```bash
 conda activate zhp
 ```
-
-## Related Repository
-
-Main method repository: `/home/laohe/dev_yfliu/pseudocode/iresfm_main_method/`

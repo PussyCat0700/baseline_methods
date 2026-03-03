@@ -1,16 +1,28 @@
 """
-TFT - Temporal Fusion Transformer (Ultrashort Wind)
+Baseline Method: TFT (Temporal Fusion Transformer)
+Task: Ultrashort Wind Power Forecasting
 
 Temporal Fusion Transformer with variable selection for ultrashort forecasting.
+
+Tested Configurations:
+    Config 1: d_model=112, lstm_layers=9, num_heads=7, dropout=0.1  ✓ BEST
+    Config 2: d_model=56, lstm_layers=7, num_heads=7, dropout=0.1
+    Config 3: d_model=49, lstm_layers=5, num_heads=7, dropout=0.1
+
+Best Configuration: Config 1
+    - d_model: 112
+    - lstm_layers: 9
+    - num_heads: 7
+    - dropout: 0.1
 """
 
 class TFT:
-    def __init__(self, hidden_dim=256, num_heads=4, num_layers=3):
-        self.variable_selection = VariableSelectionNetwork(hidden_dim)
-        self.lstm_encoder = LSTM(hidden_dim, hidden_dim, num_layers=2)
-        self.attention = MultiHeadAttention(num_heads, hidden_dim)
-        self.gating = GatedResidualNetwork(hidden_dim)
-        self.fc = Linear(hidden_dim, 480)
+    def __init__(self, d_model=112, lstm_layers=9, num_heads=7, dropout=0.1):
+        self.variable_selection = VariableSelectionNetwork(d_model)
+        self.lstm_encoder = LSTM(d_model, d_model, num_layers=lstm_layers, dropout=dropout)
+        self.attention = MultiHeadAttention(num_heads, d_model)
+        self.gating = GatedResidualNetwork(d_model)
+        self.fc = Linear(d_model, 480)
 
     def forward(self, weather_past, weather_future, power_past):
         """
@@ -26,16 +38,16 @@ class TFT:
             weather_past,
             weather_future,
             power_past
-        ])  # [B, T, hidden_dim]
+        ])  # [B, T, d_model]
 
         # LSTM encoding
-        lstm_out, _ = self.lstm_encoder(selected_features)  # [B, T, hidden_dim]
+        lstm_out, _ = self.lstm_encoder(selected_features)  # [B, T, d_model]
 
         # Multi-head attention
-        attn_out = self.attention(lstm_out, lstm_out, lstm_out)  # [B, T, hidden_dim]
+        attn_out = self.attention(lstm_out, lstm_out, lstm_out)  # [B, T, d_model]
 
         # Gating
-        gated_out = self.gating(attn_out)  # [B, T, hidden_dim]
+        gated_out = self.gating(attn_out)  # [B, T, d_model]
 
         # Output projection
         return self.fc(gated_out.mean(dim=1))  # [B, 480]

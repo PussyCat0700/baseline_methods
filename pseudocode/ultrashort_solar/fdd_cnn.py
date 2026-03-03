@@ -1,24 +1,43 @@
 """
-FDD-CNN - Frequency Domain Decomposition + CNN (Ultrashort Solar)
+Baseline Method: FDD-CNN (Frequency Domain Decomposition + CNN)
+Task: Ultrashort Solar Power Forecasting
 
 Uses FFT and CNN for frequency-domain ultrashort solar forecasting.
+
+Tested Configurations:
+    Config 1: cutoff_frac=0.08, conv1_channels=16, conv2_channels=32, fc_hidden_dim=128
+    Config 2: cutoff_frac=0.12, conv1_channels=32, conv2_channels=64, fc_hidden_dim=256
+    Config 3: cutoff_frac=0.16, conv1_channels=32, conv2_channels=96, fc_hidden_dim=256  ✓ BEST
+
+Best Configuration: Config 3
+    - cutoff_frac: 0.16
+    - conv1_channels: 32
+    - conv2_channels: 96
+    - fc_hidden_dim: 256
 """
 
 class FDD_CNN:
-    def __init__(self, n_bands=3, cnn_channels=[32,64,128]):
+    def __init__(self, cutoff_frac=0.16, conv1_channels=32, conv2_channels=96, fc_hidden_dim=256):
         self.fft = FFT()
-        self.band_cnns = [
-            Sequential([
-                Conv1D(1, cnn_channels[0], kernel_size=3),
-                ReLU(),
-                Conv1D(cnn_channels[0], cnn_channels[1], kernel_size=3),
-                ReLU(),
-                Conv1D(cnn_channels[1], cnn_channels[2], kernel_size=3),
-                ReLU()
-            ])
-            for _ in range(n_bands)
-        ]
-        self.fc = Linear(cnn_channels[2] * n_bands, 480)
+        self.cutoff_frac = cutoff_frac
+
+        self.low_branch = Sequential([
+            Conv1D(1, conv1_channels, kernel_size=5),
+            ReLU(),
+            Conv1D(conv1_channels, conv2_channels, kernel_size=5),
+            ReLU()
+        ])
+        self.high_branch = Sequential([
+            Conv1D(1, conv1_channels, kernel_size=3),
+            ReLU(),
+            Conv1D(conv1_channels, conv2_channels, kernel_size=3),
+            ReLU()
+        ])
+        self.fc = Sequential([
+            Linear(conv2_channels * 2, fc_hidden_dim),
+            ReLU(),
+            Linear(fc_hidden_dim, 480)
+        ])
 
     def forward(self, weather_past, weather_future, power_past):
         """
@@ -32,16 +51,13 @@ class FDD_CNN:
         # FFT
         freq = self.fft(power_past)  # [B, 480] complex
 
-        # Split into frequency bands
-        bands = split_frequency_bands(freq, n_bands=3)  # List of [B, T_i]
+        # Split into low and high frequency
+        low_freq, high_freq = split_frequency(freq, cutoff_frac=self.cutoff_frac)
 
         # CNN for each band
-        features = []
-        for cnn, band in zip(self.band_cnns, bands):
-            x = band.unsqueeze(1)  # [B, 1, T_i]
-            x = cnn(x)  # [B, 128, T']
-            features.append(x.mean(dim=-1))  # [B, 128]
+        low_feat = self.low_branch(low_freq.unsqueeze(1))  # [B, conv2_channels, T']
+        high_feat = self.high_branch(high_freq.unsqueeze(1))  # [B, conv2_channels, T']
 
         # Concatenate and predict
-        x = concat(features, dim=-1)  # [B, 128*3]
-        return self.fc(x)  # [B, 480]
+        features = concat([low_feat.mean(dim=-1), high_feat.mean(dim=-1)])  # [B, conv2_channels*2]
+        return self.fc(features)  # [B, 480]

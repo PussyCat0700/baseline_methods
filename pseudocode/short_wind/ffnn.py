@@ -1,5 +1,6 @@
 """
-FFNN - Feed-Forward Neural Network (Short-term Wind)
+Baseline Method: FFNN (Feed-Forward Neural Network)
+Task: Short-term Wind Power Forecasting
 
 Simple multi-layer perceptron baseline.
 
@@ -8,16 +9,19 @@ Tested Configurations:
     Config 2: hidden_dim=256, num_layers=8
     Config 3: hidden_dim=128, num_layers=4  ✓ BEST
 
-Best Config: 3
+Best Configuration: Config 3
+    - hidden_dim: 128
+    - num_layers: 4
+    - dropout: 0.3
 """
 
 class FFNN:
-    def __init__(self, hidden_dim=128, num_layers=4):  # Best config
+    def __init__(self, hidden_dim=128, num_layers=4, dropout=0.3):
         self.layers = Sequential([
             Linear(input_dim, hidden_dim),
             ReLU(),
-            Dropout(0.3),
-            *[Linear(hidden_dim, hidden_dim), ReLU(), Dropout(0.3)] * (num_layers-1),
+            Dropout(dropout),
+            *[Linear(hidden_dim, hidden_dim), ReLU(), Dropout(dropout)] * (num_layers-1),
             Linear(hidden_dim, 480)
         ])
 
