@@ -77,9 +77,25 @@ Open-source dataset with 185 power stations:
 - **Data**: Baselines need full station history, IResFM transfers knowledge
 - **Architecture**: Baselines use various architectures, IResFM uses Swin Transformer
 
+## Hyperparameter Configurations
+
+Each baseline method was tested with 3 different hyperparameter configurations:
+- **Config 1**: Typically larger/more complex model
+- **Config 2**: Medium-sized model
+- **Config 3**: Smaller/simpler model
+
+The best performing configuration for each method is documented in `CONFIGS.md`.
+
+**Configuration Selection Process**:
+1. Tested all 3 configs on 60-station subset
+2. Selected best config based on validation performance
+3. Used best config for full training on all stations
+
+See `CONFIGS.md` for complete configuration details.
+
 ## Notes
 
 - This is **pseudocode** for documentation, not executable code
 - All baselines use the same data and evaluation protocol
-- Each baseline tested with 3 hyperparameter configurations
+- Each baseline tested with 3 hyperparameter configurations (see CONFIGS.md)
 - Original implementation: `/home/laohe/dev_yfliu/upstream_backup/ne_baseline/`

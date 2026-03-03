@@ -2,10 +2,17 @@
 FFNN - Feed-Forward Neural Network (Short-term Wind)
 
 Simple multi-layer perceptron baseline.
+
+Tested Configurations:
+    Config 1: hidden_dim=512, num_layers=12
+    Config 2: hidden_dim=256, num_layers=8
+    Config 3: hidden_dim=128, num_layers=4  ✓ BEST
+
+Best Config: 3
 """
 
 class FFNN:
-    def __init__(self, hidden_dim=512, num_layers=3):
+    def __init__(self, hidden_dim=128, num_layers=4):  # Best config
         self.layers = Sequential([
             Linear(input_dim, hidden_dim),
             ReLU(),
