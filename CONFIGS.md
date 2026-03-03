@@ -27,7 +27,9 @@ Config 3: n_estimators=400, num_leaves=700, embed_dim=64, power_ctx_dim=32, enco
 
 ### 4. CNN-LSTM (CNNLSTMModel) - Best: Config 3
 ```python
-# Note: Need to identify correct model file in original repo
+Config 1: hidden_size=64, num_layers=1
+Config 2: hidden_size=128, num_layers=2
+Config 3: hidden_size=256, num_layers=4  ✓
 ```
 
 ### 5. GREEK (GREEKModel) - Best: Config 3
@@ -165,8 +167,37 @@ Config 3: num_trees=300, num_leaves=20, embed_dim=96, power_ctx_dim=96, encoder_
 
 ## Notes
 
-- All configurations extracted from original repository
+- All configurations extracted from original repository (verified against scheduler.py)
 - All configurations tested on 60-station subset during hyperparameter search
-- Best configurations selected based on validation performance
+- Best configurations selected based on validation performance and documented in scheduler.py
 - Original model class names in parentheses for reference
-- CNN-LSTM (short-term wind) model file needs identification in original repo
+
+## Model Name Mapping (from scheduler.py)
+
+**Short-term Wind:**
+- HEFTCom24LGBMModelv2 → HEFTCom24
+- GEFCom12GDBoostModel → GEFCom12
+- ExampleMLP → FFNN
+- GREEKModel → GREEK
+- CNNLSTMModel → CNN-LSTM
+
+**Short-term Solar:**
+- SolarMLPModel → Solar-MLP
+- CrossViViTModelv2 → CrossViViT
+- PVTransNetE → PVTransNet
+- PVAttnCNNModel → CNN-LSTM
+- PVCrossAttentionUltraShortModelv2 → FusionSF
+
+**Ultrashort Wind:**
+- WindLSTMEncoderDecoderResidualv2 → HBOLA
+- Wang2024StaticTFTModelv2 → TFT
+- LSSVMNNModel → LSSVM-RBFNN
+- MultiScaleFDDCNNResidualPowerModelv2 → DMOM
+- SoftMaskFDDCNNResidualPowerModelv2 → SC-VAR
+
+**Ultrashort Solar:**
+- MultiScaleFDDCNNResidualPowerModel → WPD-LSTM
+- TriBandFDDDilatedCNNResidualModel → ATCN
+- SoftMaskFDDCNNResidualPowerModelv3 → LSTM-GCN-MLP
+- Yan2021FDDCNNModel → FDD-CNN
+- Ibrahim2020RFALOModelv2 → RFs-ALO
