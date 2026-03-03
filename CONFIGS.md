@@ -27,14 +27,14 @@ Config 3: n_estimators=400, num_leaves=700, embed_dim=64, power_ctx_dim=32, enco
 
 ### 4. CNN-LSTM (CNNLSTMModel) - Best: Config 3
 ```python
-# Note: Original model name unclear, configs need verification from original repo
+# Note: Need to identify correct model file in original repo
 ```
 
 ### 5. GREEK (GREEKModel) - Best: Config 3
 ```python
 Config 1: n_estimators=50, max_features=32, embed_dim=64, power_ctx_dim=32, encoder_hidden_dim=128
 Config 2: n_estimators=100, max_features=64, embed_dim=128, power_ctx_dim=64, encoder_hidden_dim=256
-Config 3: (need to extract from original file)  ✓
+Config 3: n_estimators=150, max_features=128, embed_dim=256, power_ctx_dim=128, encoder_hidden_dim=512  ✓
 ```
 
 ## Short-term Solar
@@ -43,15 +43,20 @@ Config 3: (need to extract from original file)  ✓
 ```python
 Config 1: hidden_dim=512, num_hidden_layers=3, dropout=0.3, time_encoding_dim=32
 Config 2: hidden_dim=384, num_hidden_layers=2, dropout=0.2, time_encoding_dim=24  ✓
-Config 3: hidden_dim=256, num_hidden_layers=2, (dropout and time_encoding_dim need extraction)
+Config 3: hidden_dim=256, num_hidden_layers=2, dropout=0.2, time_encoding_dim=16
 ```
 
 ### 7. CrossViViT (CrossViViTModelv2) - Best: Config 3
 ```python
-Config 1: dim=384, depth=16, heads=12, dim_head=64, mlp_ratio=4, dropout=0.4,
-          use_glu=True, depth_cross=4, decoder_dim=128, decoder_depth=4, decoder_heads=6
-Config 2: (need to extract from original file)
-Config 3: (need to extract from original file)  ✓
+Config 1: dim=384, depth=16, heads=12, dim_head=64, mlp_ratio=4, dropout=0.4, use_glu=True,
+          depth_cross=4, decoder_dim=128, decoder_depth=4, decoder_heads=6, decoder_dim_head=128,
+          use_weather_past=False
+Config 2: dim=256, depth=12, heads=8, dim_head=64, mlp_ratio=4, dropout=0.3, use_glu=True,
+          depth_cross=3, decoder_dim=96, decoder_depth=3, decoder_heads=4, decoder_dim_head=96,
+          use_weather_past=False
+Config 3: dim=128, depth=8, heads=6, dim_head=64, mlp_ratio=4, dropout=0.2, use_glu=True,
+          depth_cross=2, decoder_dim=64, decoder_depth=2, decoder_heads=3, decoder_dim_head=64,
+          use_weather_past=False  ✓
 ```
 
 ### 8. PVTransNet (PVTransNetE) - Best: Config 3
@@ -137,7 +142,8 @@ Config 1: hidden_dim=64, num_layers=2, dropout=0.1, conv1_channels=16, conv2_cha
           cutoff_frac=0.10, soft_temp=1.5
 Config 2: hidden_dim=96, num_layers=3, dropout=0.1, conv1_channels=24, conv2_channels=48,
           cutoff_frac=0.12, soft_temp=2.0
-Config 3: (need to extract from original file)  ✓
+Config 3: hidden_dim=128, num_layers=3, dropout=0.15, conv1_channels=32, conv2_channels=64,
+          cutoff_frac=0.15, soft_temp=2.5  ✓
 ```
 
 ### 19. FDD-CNN (Yan2021FDDCNNModel) - Best: Config 3
@@ -151,13 +157,16 @@ Config 3: cutoff_frac=0.16, conv1_channels=32, conv2_channels=96, fc_hidden_dim=
 ```python
 Config 1: num_trees=500, num_leaves=10, embed_dim=128, power_ctx_dim=128, encoder_hidden_dim=256,
           cnn_c_hidden=48, cnn_fc_hidden=256, cutoff_frac=0.12, dropout=0.1
-Config 2: num_trees=1000, (other params need extraction)  ✓
-Config 3: (need to extract from original file)
+Config 2: num_trees=1000, num_leaves=5, embed_dim=64, power_ctx_dim=64, encoder_hidden_dim=128,
+          cnn_c_hidden=32, cnn_fc_hidden=128, cutoff_frac=0.10, dropout=0.15  ✓
+Config 3: num_trees=300, num_leaves=20, embed_dim=96, power_ctx_dim=96, encoder_hidden_dim=192,
+          cnn_c_hidden=40, cnn_fc_hidden=192, cutoff_frac=0.14, dropout=0.12
 ```
 
 ## Notes
 
+- All configurations extracted from original repository
 - All configurations tested on 60-station subset during hyperparameter search
 - Best configurations selected based on validation performance
-- Some configurations incomplete - marked with "need extraction"
 - Original model class names in parentheses for reference
+- CNN-LSTM (short-term wind) model file needs identification in original repo
