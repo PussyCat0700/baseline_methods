@@ -4,7 +4,7 @@ Pseudocode documentation for 20 baseline methods used for comparison with IResFM
 
 ## Overview
 
-This repository contains simplified pseudocode for baseline power forecasting methods. All baselines follow a unified interface and are trained on the same open-source dataset (185 stations).
+This repository contains simplified pseudocode for baseline power forecasting methods. All baselines follow a unified interface and are trained on the same dataset.
 
 ## Repository Structure
 
@@ -16,7 +16,7 @@ This repository contains simplified pseudocode for baseline power forecasting me
 │   ├── short_solar/         # Short-term solar forecasting (5 methods)
 │   ├── ultrashort_wind/     # Ultrashort wind forecasting (5 methods)
 │   └── ultrashort_solar/    # Ultrashort solar forecasting (5 methods)
-└── data/                    # Open-source dataset (symlink)
+└── data/                    # Open-source dataset path
 ```
 
 ## Baseline Methods by Task
@@ -65,9 +65,7 @@ Weather channels: 12 for solar, 15 for wind
 
 ## Dataset
 
-Open-source dataset with 185 power stations:
-- Wind: 611 stations
-- Solar: 546 stations
+Open-source dataset with real power stations:
 - Data: Power CSVs + Weather NPY arrays
 - Location: `data/` directory
 
@@ -75,15 +73,10 @@ Open-source dataset with 185 power stations:
 
 - **Training**: Baselines train from scratch, IResFM uses pretrained weights
 - **Data**: Baselines need full station history, IResFM transfers knowledge
-- **Architecture**: Baselines use various architectures, IResFM uses Swin Transformer
 
 ## Hyperparameter Configurations
 
-Each baseline method was tested with 3 different hyperparameter configurations:
-- **Config 1**: Typically larger/more complex model
-- **Config 2**: Medium-sized model
-- **Config 3**: Smaller/simpler model
-
+Each baseline method was tested with 3 different hyperparameter configurations.
 The best performing configuration for each method is documented in `CONFIGS.md`.
 
 **Configuration Selection Process**:
