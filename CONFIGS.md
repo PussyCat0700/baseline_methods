@@ -148,7 +148,7 @@ Config 3: hidden_dim=128, num_layers=3, dropout=0.15, conv1_channels=32, conv2_c
           cutoff_frac=0.15, soft_temp=2.5  ✓
 ```
 
-### 19. FDD-CNN (Yan2021FDDCNNModel) - Best: Config 3
+### 19. NARX-GA (Yan2021FDDCNNModel) - Best: Config 3
 ```python
 Config 1: cutoff_frac=0.08, conv1_channels=16, conv2_channels=32, fc_hidden_dim=128
 Config 2: cutoff_frac=0.12, conv1_channels=32, conv2_channels=64, fc_hidden_dim=256
@@ -199,5 +199,5 @@ Config 3: num_trees=300, num_leaves=20, embed_dim=96, power_ctx_dim=96, encoder_
 - MultiScaleFDDCNNResidualPowerModel → WPD-LSTM
 - TriBandFDDDilatedCNNResidualModel → ATCN
 - SoftMaskFDDCNNResidualPowerModelv3 → LSTM-GCN-MLP
-- Yan2021FDDCNNModel → FDD-CNN
+- Yan2021FDDCNNModel → NARX-GA
 - Ibrahim2020RFALOModelv2 → RFs-ALO

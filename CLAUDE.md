@@ -60,7 +60,7 @@ This repository contains pseudocode documentation for 20 baseline power forecast
 16. WPD-LSTM - Wavelet Packet Decomposition + LSTM
 17. ATCN - Attention-based Temporal Convolutional Network
 18. LSTM-GCN-MLP - LSTM-GCN-MLP Hybrid
-19. FDD-CNN - Frequency Domain Decomposition + CNN
+19. NARX-GA - Frequency Domain Decomposition + CNN
 20. RFs-ALO - Random Forests with Ant Lion Optimizer
 
 ## Important Notes

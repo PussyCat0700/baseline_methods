@@ -1,5 +1,5 @@
 """
-Baseline Method: FDD-CNN (Frequency Domain Decomposition + CNN)
+Baseline Method: NARX-GA
 Task: Ultrashort Solar Power Forecasting
 
 Uses FFT and CNN for frequency-domain ultrashort solar forecasting.
