@@ -1,10 +1,26 @@
 # Baseline Methods for Power Forecasting
 
-Pseudocode documentation for 20 baseline methods used for comparison with IResFM.
+Pseudocode documentation for the 20 baseline methods used for comparison with
+IResFM.
+
+Fixed release:
+`https://github.com/PussyCat0700/baseline_methods/releases/tag/v1.0.0`
 
 ## Overview
 
-This repository contains simplified pseudocode for baseline power forecasting methods. All baselines follow a unified interface and are trained on the same dataset.
+This repository contains detailed, implementation-oriented pseudocode for the
+baseline power forecasting methods. All methods follow a unified input and
+output interface. The tested hyperparameter configurations and the selected
+configuration for each method are recorded in `CONFIGS.md`.
+
+## Scope
+
+The files specify the model components, data flow, input and output shapes, and
+tested hyperparameter configurations used to implement the comparison methods
+in the IResFM study. They are intended to support independent implementation
+and assessment. They are pseudocode rather than copies of the original
+authors' software, and the repository does not contain the third-party
+operational data used in the complete 1,249-site benchmark.
 
 ## Repository Structure
 
@@ -63,11 +79,15 @@ All baselines use the same input/output format:
 
 Weather channels: 12 for solar, 15 for wind
 
-## Dataset
+## Data Interface
 
-Open-source dataset with real power stations:
-- Data: Power CSVs + Weather NPY arrays
-- Location: `data/` directory
+The methods use the same power and weather input format documented in the
+IResFM public release:
+
+- Public data and format:
+  `https://github.com/PussyCat0700/iresfm_main_method/releases/tag/v1.0.0`
+- Power: site-level normalized power series
+- Weather: gridded meteorological forecast arrays
 
 ## Key Differences from IResFM
 
