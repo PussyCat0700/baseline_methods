@@ -1,0 +1,463 @@
+protocol:
+  history_hours: 120
+  forecast_hours: 120
+  power_resolution_minutes: 15
+  weather_features:
+    wind: 15
+    solar: 12
+  timezone: Asia/Shanghai
+  tuning_sites:
+    wind: 30
+    solar: 30
+  selection_score: mean_site_standardized_mse
+  sm_aggregation: equal_mean_short_medium
+  tie_break: candidate_id_ascending
+  training_steps:
+  - 0
+  - 480
+  task_windows:
+    us:
+    - - 0
+      - 16
+    sm:
+    - - 63
+      - 159
+    - - 351
+      - 447
+  issue_hours:
+    us:
+    - 0
+    - 4
+    - 8
+    - 12
+    - 16
+    - 20
+    sm:
+    - 8
+  seeds:
+  - 42
+  training:
+    epochs: 100
+    batch_size: 32
+    learning_rate: 0.001
+    weight_decay: 0.0001
+    patience: 10
+    gradient_clip: 1.0
+    device: cpu
+    threads: 1
+  scaling: per_site_training_zscore
+  output_postprocess: none
+methods:
+  heftcom24:
+    name: HEFTCom24
+    task: wind_sm
+    fixed:
+      learning_rate: 0.05
+      feature_views:
+      - all
+      - power_weather
+      - weather_horizon
+      oof_folds: 3
+      min_child_samples: 10
+      n_jobs: 1
+    candidates:
+    - id: 1
+      estimators: 100
+      leaves: 200
+    - id: 2
+      estimators: 200
+      leaves: 400
+    - id: 3
+      estimators: 400
+      leaves: 700
+  gefcom12:
+    name: GEFCom12
+    task: wind_sm
+    fixed:
+      learning_rate: 0.05
+      min_child_samples: 10
+      n_jobs: 1
+    candidates:
+    - id: 1
+      estimators: 5
+      leaves: 16
+    - id: 2
+      estimators: 10
+      leaves: 32
+    - id: 3
+      estimators: 20
+      leaves: 64
+  ffnn:
+    name: FFNN
+    task: wind_sm
+    fixed:
+      dropout: 0.1
+      weather_pool: 30
+      power_pool: 120
+    candidates:
+    - id: 1
+      hidden_dim: 512
+      hidden_layers: 12
+    - id: 2
+      hidden_dim: 256
+      hidden_layers: 8
+    - id: 3
+      hidden_dim: 128
+      hidden_layers: 4
+  hpe:
+    name: HPE
+    task: wind_sm
+    fixed:
+      daily_seasonality: true
+      weekly_seasonality: true
+      yearly_seasonality: false
+      changepoint_prior_scale: 0.05
+      n_jobs: 1
+    candidates:
+    - id: 1
+      estimators: 50
+      max_features: 32
+    - id: 2
+      estimators: 100
+      max_features: 64
+    - id: 3
+      estimators: 150
+      max_features: 128
+  cnn_rbfnn:
+    name: CNN-RBFNN
+    task: wind_sm
+    fixed:
+      kernel_size: 3
+      rbf_centers: 64
+      rbf_projection_dim: 32
+      initial_widths:
+      - 1.0
+      - 2.0
+    candidates:
+    - id: 1
+      cnn_channels: 64
+      cnn_blocks: 1
+    - id: 2
+      cnn_channels: 128
+      cnn_blocks: 2
+    - id: 3
+      cnn_channels: 256
+      cnn_blocks: 4
+  ann:
+    name: ANN
+    task: solar_sm
+    fixed:
+      selected_features: 64
+      selection_rule: absolute_training_correlation
+    candidates:
+    - id: 1
+      hidden_dim: 512
+      layers: 3
+      dropout: 0.3
+    - id: 2
+      hidden_dim: 384
+      layers: 2
+      dropout: 0.2
+    - id: 3
+      hidden_dim: 256
+      layers: 2
+      dropout: 0.2
+  crossvivit:
+    name: CrossViViT
+    task: solar_sm
+    fixed:
+      head_dim: 32
+      dropout: 0.1
+      ff_multiplier: 2
+    candidates:
+    - id: 1
+      d_model: 384
+      encoder_layers: 16
+      cross_layers: 4
+      decoder_layers: 4
+      heads: 12
+    - id: 2
+      d_model: 256
+      encoder_layers: 12
+      cross_layers: 3
+      decoder_layers: 3
+      heads: 8
+    - id: 3
+      d_model: 128
+      encoder_layers: 8
+      cross_layers: 2
+      decoder_layers: 2
+      heads: 6
+  pvtransnet:
+    name: PVTransNet
+    task: solar_sm
+    fixed:
+      variant: E
+      dropout: 0.1
+      ff_multiplier: 2
+    candidates:
+    - id: 1
+      d_model: 128
+      layers: 1
+      heads: 2
+      head_dim: 64
+    - id: 2
+      d_model: 256
+      layers: 4
+      heads: 4
+      head_dim: 128
+    - id: 3
+      d_model: 512
+      layers: 12
+      heads: 8
+      head_dim: 128
+  cnn_lstm:
+    name: CNN-LSTM
+    task: solar_sm
+    fixed:
+      kernel_size: 3
+      lstm_layers: 1
+      conv_stride: 1
+      conv_padding: same
+      dropout_location: prediction_head
+    candidates:
+    - id: 1
+      hidden_dim: 128
+      cnn_layers: 2
+      dropout: 0.1
+    - id: 2
+      hidden_dim: 256
+      cnn_layers: 3
+      dropout: 0.1
+    - id: 3
+      hidden_dim: 128
+      cnn_layers: 4
+      dropout: 0.2
+  fusionsf:
+    name: FusionSF
+    task: solar_sm
+    fixed:
+      codebook_size: 64
+      quantization_dim: 64
+      commitment_weight: 0.25
+      dropout: 0.1
+    candidates:
+    - id: 1
+      hidden_dim: 128
+      heads: 2
+      decoder_layers: 3
+    - id: 2
+      hidden_dim: 256
+      heads: 4
+      decoder_layers: 6
+    - id: 3
+      hidden_dim: 512
+      heads: 8
+      decoder_layers: 12
+  hbola:
+    name: HBOLA
+    task: wind_us
+    fixed:
+      hedge_learning_rate: 0.1
+      weight_floor: 0.001
+      drift_window: 20
+      drift_factor: 1.5
+    candidates:
+    - id: 1
+      hidden_size: 64
+      layers: 5
+      dropout: 0.1
+    - id: 2
+      hidden_size: 96
+      layers: 10
+      dropout: 0.1
+    - id: 3
+      hidden_size: 128
+      layers: 20
+      dropout: 0.15
+  tft:
+    name: TFT
+    task: wind_us
+    fixed:
+      heads: 7
+      dropout: 0.1
+      static_context: false
+    candidates:
+    - id: 1
+      hidden_size: 112
+      lstm_layers: 9
+    - id: 2
+      hidden_size: 56
+      lstm_layers: 7
+    - id: 3
+      hidden_size: 49
+      lstm_layers: 5
+  lssvm_rbfnn:
+    name: LSSVM+RBFNN
+    task: wind_us
+    fixed:
+      support_budget: 512
+      rbf_width: 1.0
+      rbf_ridge: 0.001
+      grey_rho: 0.5
+      wind_regime_feature: 0
+      regime_bins: 3
+      weather_pool: 30
+      power_pool: 120
+    candidates:
+    - id: 1
+      C: 10
+      gamma: 1/d
+      rbf_centers: 64
+    - id: 2
+      C: 100
+      gamma: 0.1/d
+      rbf_centers: 128
+    - id: 3
+      C: 1000
+      gamma: 0.01/d
+      rbf_centers: 256
+  dmom:
+    name: DMOM
+    task: wind_us
+    fixed:
+      top_n: 128
+      local_epochs: 3
+      local_learning_rate: 0.0001
+      lstm_layers: 1
+    candidates:
+    - id: 1
+      hidden_units: 32
+      power_similarity_weight: 0.3
+      dropout: 0.05
+    - id: 2
+      hidden_units: 48
+      power_similarity_weight: 0.5
+      dropout: 0.1
+    - id: 3
+      hidden_units: 64
+      power_similarity_weight: 0.7
+      dropout: 0.15
+  sc_var:
+    name: SC-VAR
+    task: wind_us
+    fixed:
+      max_fit_rows: 100000
+      lags_minutes: 15
+      solver_max_iter: 10000
+    candidates:
+    - id: 1
+      ar_order: 4
+      sparsity_penalty: 0.0001
+      correlation_threshold: 0.1
+    - id: 2
+      ar_order: 8
+      sparsity_penalty: 0.001
+      correlation_threshold: 0.2
+    - id: 3
+      ar_order: 16
+      sparsity_penalty: 0.01
+      correlation_threshold: 0.3
+  wpd_lstm:
+    name: WPD-LSTM
+    task: solar_us
+    fixed:
+      wavelet: db3
+      level: 2
+      boundary: symmetric
+      lstm_layers: 1
+    candidates:
+    - id: 1
+      hidden_units: 128
+      dropout: 0.1
+    - id: 2
+      hidden_units: 256
+      dropout: 0.1
+    - id: 3
+      hidden_units: 256
+      dropout: 0.2
+  atcn:
+    name: ATCN
+    task: solar_us
+    fixed:
+      dilations:
+      - 1
+      - 2
+      - 4
+      - 8
+      num_bases: 3
+      loss: mae
+    candidates:
+    - id: 1
+      hidden_dim: 48
+      kernel_size: 5
+      dropout: 0.1
+    - id: 2
+      hidden_dim: 64
+      kernel_size: 5
+      dropout: 0.1
+    - id: 3
+      hidden_dim: 80
+      kernel_size: 7
+      dropout: 0.2
+  lstm_gcn_mlp:
+    name: LSTM-GCN-MLP
+    task: solar_us
+    fixed:
+      gcn_layers: 2
+      graph_threshold: 0.2
+      kernel_self_loop: 1.0
+    candidates:
+    - id: 1
+      hidden_units: 64
+      lstm_layers: 2
+      dropout: 0.1
+    - id: 2
+      hidden_units: 96
+      lstm_layers: 3
+      dropout: 0.1
+    - id: 3
+      hidden_units: 128
+      lstm_layers: 3
+      dropout: 0.15
+  narx_ga:
+    name: NARX-GA
+    task: solar_us
+    fixed:
+      population_size: 30
+      ga_generations: 30
+      elite_fraction: 0.1
+      mutation_rate: 0.05
+      mutation_scale: 0.02
+      crossover_rate: 0.8
+      weather_lags: 1
+      max_fit_windows: 128
+    candidates:
+    - id: 1
+      feedback_lags: 8
+      hidden_units: 128
+    - id: 2
+      feedback_lags: 16
+      hidden_units: 256
+    - id: 3
+      feedback_lags: 32
+      hidden_units: 256
+  rfs_alo:
+    name: RFs-ALO
+    task: solar_us
+    fixed:
+      alo_population: 8
+      alo_iterations: 10
+      max_features: 1.0
+      bootstrap: true
+      n_jobs: 1
+    candidates:
+    - id: 1
+      trees: 500
+      leaves: 10
+    - id: 2
+      trees: 1000
+      leaves: 5
+    - id: 3
+      trees: 300
+      leaves: 20
