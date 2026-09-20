@@ -23,31 +23,6 @@ common.py          Data handling, scaling, scoring and shared fitting functions
 methods/           One documented Python file per method; explicit registration in __init__.py
 ```
 
-## Methods
-
-| Identifier | Method file | Reference |
-|---|---|---|
-| `heftcom24` | [HEFTCom24](methods/heftcom24.py) | [Pu et al., HEFTCom2024](https://arxiv.org/abs/2505.10367) |
-| `gefcom12` | [GEFCom12](methods/gefcom12.py) | [Silva (2014)](https://doi.org/10.1016/j.ijforecast.2013.07.007) |
-| `ffnn` | [FFNN](methods/ffnn.py) | [Bhaskar and Singh (2012)](https://doi.org/10.1109/TSTE.2011.2182215) |
-| `hpe` | [HPE](methods/hpe.py) | [Vartholomaios et al. (2021)](https://arxiv.org/abs/2107.03825) |
-| `cnn_rbfnn` | [CNN-RBFNN](methods/cnn_rbfnn.py) | [Hong and Rioflorido (2019)](https://doi.org/10.1016/j.apenergy.2019.05.044) |
-| `ann` | [ANN](methods/ann.py) | [Yadav et al. (2014)](https://doi.org/10.1016/j.rser.2013.12.008) |
-| `crossvivit` | [CrossViViT](methods/crossvivit.py) | [Boussif et al. (2023)](https://proceedings.neurips.cc/paper_files/paper/2023/hash/070a57c5ef1e58cc90201b11d369b3c2-Abstract-Conference.html) |
-| `pvtransnet` | [PVTransNet-E](methods/pvtransnet.py) | [Kim et al. (2024)](https://doi.org/10.1016/j.rser.2024.114479) |
-| `cnn_lstm` | [CNN-LSTM](methods/cnn_lstm.py) | [Agga et al. (2022)](https://doi.org/10.1016/j.epsr.2022.107908) |
-| `fusionsf` | [FusionSF](methods/fusionsf.py) | [Ma et al. (2024)](https://arxiv.org/abs/2402.05823) |
-| `hbola` | [HBOLA](methods/hbola.py) | [Pan et al. (2024)](https://doi.org/10.1109/TPWRS.2023.3304898) |
-| `tft` | [TFT](methods/tft.py) | [Wang et al. (2024)](https://doi.org/10.1016/j.energy.2024.133577) |
-| `lssvm_rbfnn` | [LSSVM+RBFNN](methods/lssvm_rbfnn.py) | [Shi et al. (2014)](https://doi.org/10.1109/TSG.2013.2283269) |
-| `dmom` | [DMOM](methods/dmom.py) | [Li et al. (2025)](https://doi.org/10.1109/TSTE.2024.3424932) |
-| `sc_var` | [SC-VAR](methods/sc_var.py) | [Zhao et al. (2018)](https://doi.org/10.1109/TPWRS.2018.2794450) |
-| `wpd_lstm` | [WPD-LSTM](methods/wpd_lstm.py) | [Li et al. (2020)](https://doi.org/10.1016/j.apenergy.2019.114216) |
-| `atcn` | [ATCN](methods/atcn.py) | [Liang and Tang (2022)](https://doi.org/10.1109/TSG.2022.3175451) |
-| `lstm_gcn_mlp` | [LSTM-GCN-MLP](methods/lstm_gcn_mlp.py) | [Yue et al. (2024)](https://doi.org/10.1109/TSTE.2024.3390578) |
-| `narx_ga` | [NARX-GA](methods/narx_ga.py) | [Hassan et al. (2021)](https://doi.org/10.1016/j.renene.2021.02.103) |
-| `rfs_alo` | [RFs-ALO](methods/rfs_alo.py) | [Ibrahim et al. (2020)](https://doi.org/10.1109/TII.2019.2916566) |
-
 ## Data interface
 
 Each site supplies `train.npz`, `validation.npz` and `test.npz`. Paths are provided through an external CSV manifest. Arrays must be finite and ordered by issue time.
@@ -89,15 +64,7 @@ Training, validation and test target periods must not overlap. Power and weather
 
 ### Hyperparameter selection
 
-1. Read the fixed 60-site manifest and use the 30 sites matching the method's energy type.
-2. Evaluate the three complete candidate configurations in `configs.yaml` with identical splits and seeds. Candidate rows are bound combinations, not a Cartesian grid.
-3. Compute MSE after dividing power errors by the site's training standard deviation. For SM, average short- and medium-term MSE equally; average seeds within each site and then average sites equally.
-4. Select the lowest score, resolving ties by ascending candidate ID. A failed site prevents a complete selection rather than being dropped from the average.
-5. Freeze the selected hyperparameters and train a separate model at each site in the full experiment manifest. Evaluate the held-out test period after fitting.
-
-`selected.json` records the selected configuration, fixed settings, protocol, site IDs, candidate scores, configuration hash and source hash. Training requires this file and verifies that the settings and source are unchanged. Model weights and scalers remain site-specific.
-
-NARX-GA uses GA to fit network weights. RFs-ALO uses a restricted discrete ALO search over the three candidates on the tuning pool; all three candidates receive complete evaluation, and repeated visits use cached scores. The forest parameters are then frozen for site training. Model-specific fixed settings are recorded in `configs.yaml` before selection.
+Using the fixed 60-site pool (30 wind and 30 solar), evaluate the three configurations in `configs.yaml` on the 30 sites matching each method's energy type. Select the lowest site-averaged standardized validation MSE, with equal short- and medium-term weighting for SM. Save the selection to `selected.json` and freeze the hyperparameters for per-site training across the full experiment.
 
 ### Commands
 
